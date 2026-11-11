@@ -286,7 +286,7 @@
     text-transform:uppercase;
     color: var(--ink-soft);
   }
-  .field input, .field select{
+  .field input, .field select, .field textarea{
     font-family:'Source Sans 3', sans-serif;
     font-size: 15px;
     padding: 10px 12px;
@@ -296,6 +296,12 @@
     color: var(--ink);
   }
   .field input:focus, .field select:focus{
+    outline: 2px solid var(--brass);
+    outline-offset: 1px;
+    border-color: var(--brass);
+  }
+  .field textarea{ min-height:130px; resize:vertical; }
+  .field textarea:focus{
     outline: 2px solid var(--brass);
     outline-offset: 1px;
     border-color: var(--brass);
@@ -412,6 +418,8 @@
       <button class="nav-btn" data-view="cadastro-livro"><span class="ico">&#128214;</span> Cadastrar livro</button>
       <button class="nav-btn" data-view="cadastro-funcionario"><span class="ico">&#128100;</span> Cadastrar funcionário</button>
       <button class="nav-btn" data-view="funcionarios"><span class="ico">&#9776;</span> Funcionários</button>
+      <button class="nav-btn" data-view="email"><span class="ico">&#9993;</span> Mandar e-mail</button>
+      <button class="nav-btn" data-view="formulario"><span class="ico">&#9998;</span> Formulário</button>
     </nav>
     <div class="sidebar-foot">Dados salvos<br>automaticamente</div>
   </aside>
@@ -561,6 +569,59 @@
         </div>
       </div>
     </section>
+
+    <!-- ===== VIEW: ENVIAR E-MAIL ===== -->
+    <section id="view-email" style="display:none;">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Contato</div>
+          <h1>Enviar e-mail</h1>
+          <p>Envie uma mensagem de teste para o endereço configurado.</p>
+        </div>
+      </div>
+      <div class="card form-card">
+        <div class="form-actions" style="display:block;">
+          <button type="button" class="btn-primary" id="btn-email">Enviar e-mail agora</button>
+          <p style="margin-top:16px; color: var(--ink-soft);">O destinatário configurado é: <strong id="destinatario-email">aly.matheus2342@gmail.com</strong></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-formulario" style="display:none;">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Contato</div>
+          <h1>Formulário de contato</h1>
+          <p>Preencha e exiba as informações neste navegador. Nenhum e-mail será enviado.</p>
+        </div>
+      </div>
+      <div class="card form-card">
+        <form id="form-contato">
+          <div class="form-grid">
+            <div class="field">
+              <label for="contato-nome">Nome</label>
+              <input id="contato-nome" name="nome" type="text" maxlength="100" required>
+            </div>
+            <div class="field">
+              <label for="contato-email">Seu e-mail</label>
+              <input id="contato-email" name="email" type="email" maxlength="254" required>
+            </div>
+            <div class="field full">
+              <label for="contato-assunto">Assunto</label>
+              <input id="contato-assunto" name="assunto" type="text" maxlength="120" value="Problema no e-mail - porta 9651" required>
+            </div>
+            <div class="field full">
+              <label for="contato-mensagem">Mensagem</label>
+              <textarea id="contato-mensagem" name="mensagem" maxlength="3000" required>A porta que estamos usando é 9651 e o e-mail não funciona.</textarea>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Exibir formulário</button>
+          </div>
+        </form>
+      </div>
+      <div id="resultado-formulario" class="card form-card" style="display:none; margin-top:20px;" aria-live="polite"></div>
+    </section>
   </main>
 </div>
 
@@ -572,6 +633,7 @@
 
   var STORAGE_BOOKS = "biblioteca:livros";
   var STORAGE_STAFF = "biblioteca:funcionarios";
+  var EMAIL_DESTINO = "aly.matheus2342@gmail.com";
 
   var books = [];
   var staff = [];
@@ -627,7 +689,7 @@
   function uid(){ return Math.random().toString(36).slice(2,10); }
 
   // ---------- navigation ----------
-  var views = ["acervo","cadastro-livro","cadastro-funcionario","funcionarios"];
+  var views = ["acervo","cadastro-livro","cadastro-funcionario","funcionarios","email","formulario"];
   document.getElementById("nav").addEventListener("click", function(e){
     var btn = e.target.closest(".nav-btn");
     if (!btn) return;
@@ -637,6 +699,76 @@
     });
     document.querySelectorAll(".nav-btn").forEach(function(b){ b.classList.toggle("active", b === btn); });
   });
+
+  function enviarEmail(button, dados, textoBotao){
+    button.disabled = true;
+    button.textContent = "Enviando...";
+
+    fetch("enviar_email.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados)
+    })
+      .then(function(response){
+        return response.json().then(function(result){
+          if (!response.ok) throw new Error(result.error || "Não foi possível enviar o e-mail.");
+          return result;
+        });
+      })
+      .then(function(){
+        showToast("E-mail enviado com sucesso.");
+      })
+      .catch(function(error){
+        showToast(error.message || "Falha ao enviar o e-mail.");
+      })
+      .finally(function(){
+        button.disabled = false;
+        button.textContent = textoBotao;
+      });
+  }
+
+  document.getElementById("btn-email").addEventListener("click", function(){
+    enviarEmail(this, {}, "Enviar e-mail agora");
+  });
+
+  document.getElementById("form-contato").addEventListener("submit", function(e){
+    e.preventDefault();
+    var dados = {
+      nome: document.getElementById("contato-nome").value.trim(),
+      email: document.getElementById("contato-email").value.trim(),
+      assunto: document.getElementById("contato-assunto").value.trim(),
+      mensagem: document.getElementById("contato-mensagem").value.trim()
+    };
+    var resultado = document.getElementById("resultado-formulario");
+    resultado.textContent = "";
+
+    var titulo = document.createElement("h2");
+    titulo.textContent = "Formulário preenchido";
+    resultado.appendChild(titulo);
+
+    var aviso = document.createElement("p");
+    aviso.textContent = "As informações foram exibidas neste navegador; nenhum e-mail foi enviado.";
+    resultado.appendChild(aviso);
+
+    [
+      ["Nome", dados.nome],
+      ["E-mail", dados.email],
+      ["Assunto", dados.assunto],
+      ["Mensagem", dados.mensagem]
+    ].forEach(function(campo){
+      var item = document.createElement("p");
+      var rotulo = document.createElement("strong");
+      rotulo.textContent = campo[0] + ": ";
+      item.appendChild(rotulo);
+      item.appendChild(document.createTextNode(campo[1]));
+      resultado.appendChild(item);
+    });
+
+    resultado.style.display = "block";
+    resultado.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  document.getElementById("destinatario-email").textContent = EMAIL_DESTINO;
 
   // ---------- toast ----------
   var toastTimer;

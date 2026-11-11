@@ -1,97 +1,63 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Tempo de geração: 22/09/2026 às 15:03
--- Versão do servidor: 10.4.32-MariaDB
--- Versão do PHP: 8.2.12
+CREATE DATABASE IF NOT EXISTS `biblioteca` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `biblioteca`;
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Banco de dados: `biblioteca`
---
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `bibliotecario`
---
-
-CREATE TABLE `bibliotecario` (
-  `nome` varchar(30) NOT NULL,
-  `senha` varchar(100) NOT NULL
+CREATE TABLE IF NOT EXISTS `bibliotecario` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(30) NOT NULL,
+  `senha` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Despejando dados para a tabela `bibliotecario`
---
+INSERT INTO `bibliotecario` (`nome`, `senha`)
+SELECT 'alysson', '$2y$10$cCfzNLLy5EcT/4wlzkPETOvfnNtsaYGIG48hv.1FN8Pca7nFMK5/2'
+WHERE NOT EXISTS (
+    SELECT 1 FROM `bibliotecario` WHERE `nome` = 'alysson'
+);
 
-INSERT INTO `bibliotecario` (`nome`, `senha`) VALUES
-('alysson', '$2y$10$cCfzNLLy5EcT/4wlzkPETOvfnNtsaYGIG48hv.1FN8Pca7nFMK5/2');
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `funcionario`
---
-
-CREATE TABLE `funcionario` (
-  `nome` varchar(30) NOT NULL,
-  `senha` varchar(100) NOT NULL,
-  `telefone` varchar(15) NOT NULL,
-  `cpf` varchar(15) NOT NULL
+CREATE TABLE IF NOT EXISTS `funcionario` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(30) NOT NULL,
+  `senha` VARCHAR(255) NOT NULL,
+  `telefone` VARCHAR(15) NOT NULL,
+  `cpf` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `leitores`
---
-
-CREATE TABLE `leitores` (
-  `nome` varchar(30) NOT NULL,
-  `senha` varchar(100) NOT NULL,
-  `telefone` varchar(15) NOT NULL,
-  `cpf` varchar(15) NOT NULL,
-  `endereco` varchar(60) NOT NULL
+CREATE TABLE IF NOT EXISTS `leitores` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(30) NOT NULL,
+  `senha` VARCHAR(255) NOT NULL,
+  `telefone` VARCHAR(15) NOT NULL,
+  `cpf` VARCHAR(255) NOT NULL,
+  `endereco` VARCHAR(60) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `livros`
---
-
-CREATE TABLE `livros` (
-  `status` varchar(5) NOT NULL,
-  `titulo` varchar(30) NOT NULL,
-  `autor` varchar(30) NOT NULL,
-  `genero` varchar(15) NOT NULL,
-  `quantidade` varchar(100) NOT NULL,
-  `descricao` varchar(350) NOT NULL
+CREATE TABLE IF NOT EXISTS `livros` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `status` VARCHAR(20) NOT NULL DEFAULT 'disponivel',
+  `titulo` VARCHAR(80) NOT NULL,
+  `autor` VARCHAR(80) NOT NULL,
+  `genero` VARCHAR(30) NOT NULL,
+  `quantidade` INT NOT NULL DEFAULT 0,
+  `descricao` TEXT NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `prateleira`
---
-
-CREATE TABLE `prateleira` (
-  `nome` varchar(30) NOT NULL
+CREATE TABLE IF NOT EXISTS `emprestimos` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `id_livro` INT NOT NULL,
+  `id_leitor` INT NOT NULL,
+  `data_emprestimo` DATETIME NOT NULL,
+  `data_prevista` DATE NOT NULL,
+  `data_devolucao` DATETIME NULL,
+  `multa` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `status` VARCHAR(20) NOT NULL DEFAULT 'emprestado',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-COMMIT;
 
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+CREATE TABLE IF NOT EXISTS `prateleira` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(30) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

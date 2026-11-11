@@ -5,38 +5,30 @@ include "conexao.php";
 $mensagem = "";
 
 if (isset($_POST['entrar'])) {
-
-    $nome  = trim($_POST['nome']);
+    $nome = trim($_POST['nome']);
     $senha = trim($_POST['senha']);
 
     if ($nome === "" || $senha === "") {
-
         $mensagem = "<p class='erro'>Preencha todos os campos.</p>";
-
     } else {
-
         $stmt = $conexao->prepare("SELECT nome, senha FROM leitores WHERE nome = ?");
         $stmt->bind_param("s", $nome);
         $stmt->execute();
         $resultado = $stmt->get_result();
 
         if ($resultado->num_rows === 1) {
-
             $usuario = $resultado->fetch_assoc();
 
             if (password_verify($senha, $usuario['senha'])) {
-
-                $_SESSION['tipo']  = "leitor";
-                $_SESSION['nome']  = $usuario['nome'];
+                $_SESSION['tipo'] = "leitor";
+                $_SESSION['nome'] = $usuario['nome'];
 
                 $stmt->close();
-                header("Location: tela_principal.html");
+                header("Location: tela_principal.php");
                 exit();
-
-            } else {
-                $mensagem = "<p class='erro'>Usuário ou senha inválidos.</p>";
             }
 
+            $mensagem = "<p class='erro'>Usuário ou senha inválidos.</p>";
         } else {
             $mensagem = "<p class='erro'>Usuário ou senha inválidos.</p>";
         }
